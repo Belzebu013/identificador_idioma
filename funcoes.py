@@ -3,6 +3,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from collections import Counter
 
+# URL's para baixar o conteudo do site e ser usado para a criação dos perfis
 URLS = {
    "Alemão": [
         "https://www.dw.com/de/deutsch-lernen/top-themen/s-8031",
@@ -41,6 +42,8 @@ URLS = {
     ]
 }
 
+# Baixa o conteúdo HTML da página e extrai o texto visível.
+# Remove elementos como scripts, estilos e navegação.
 def baixar_texto(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -51,6 +54,9 @@ def baixar_texto(url):
     content = soup.find("div", {"id": "bodyContent"})
     return content.get_text(" ") if content else soup.get_text(" ")
 
+# - Converte para minúsculo
+# - Remove acentos
+# - Mantém apenas letras de 'a' a 'z'
 def limpar_texto(texto):
     import unicodedata
 
@@ -60,6 +66,7 @@ def limpar_texto(texto):
 
     return ''.join(c for c in texto if 'a' <= c <= 'z')
 
+# Calcula a frequência relativa de cada letra (a-z)
 def calcular_frequencia(texto_formatato):
     if len(texto_formatato) == 0:
         return {l: 0 for l in string.ascii_lowercase}
@@ -76,6 +83,10 @@ def calcular_frequencia(texto_formatato):
 # GERA PERFIS
 # =============================
 
+# Para cada idioma:
+# - Baixa várias páginas
+# - Junta os textos
+# - Calcula frequência de letras
 def gerar_perfis():
     perfis = {}
 
@@ -100,14 +111,16 @@ def gerar_perfis():
 # SALVAR
 # =============================
 
-def salvar_perfis(perfis, arquivo="perfis.json"):
+def salvar_perfis(perfis, arquivo="perfis/perfis.json"):
     with open(arquivo, "w", encoding="utf-8") as f:
         json.dump(perfis, f, indent=4)
 
 def carregar_perfis_json():
-    with open("perfis.json", "r", encoding="utf-8") as f:
+    with open("perfis/perfis.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
+# Compara o texto com cada idioma usando similaridade de cosseno
+# Retorna o idioma mais provável
 def comparar_perfis(freq_texto, perfis):
     resultados = {}
 
